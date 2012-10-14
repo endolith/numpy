@@ -3,14 +3,14 @@ Discrete Fourier Transforms - helper.py
 """
 # Created by Pearu Peterson, September 2002
 
-__all__ = ['fftshift','ifftshift','fftfreq']
+__all__ = ['fftshift', 'ifftshift', 'fftfreq', 'rfftfreq']
 
 from numpy.core import asarray, concatenate, arange, take, \
     integer, empty
 import numpy.core.numerictypes as nt
 import types
 
-def fftshift(x,axes=None):
+def fftshift(x, axes=None):
     """
     Shift the zero-frequency component to the center of the spectrum.
 
@@ -69,7 +69,7 @@ def fftshift(x,axes=None):
     return y
 
 
-def ifftshift(x,axes=None):
+def ifftshift(x, axes=None):
     """
     The inverse of fftshift.
 
@@ -116,7 +116,8 @@ def ifftshift(x,axes=None):
         y = take(y,mylist,k)
     return y
 
-def fftfreq(n,d=1.0):
+
+def fftfreq(n, d=1.0):
     """
     Return the Discrete Fourier Transform sample frequencies.
 
@@ -124,15 +125,15 @@ def fftfreq(n,d=1.0):
     cycles/unit (with zero at the start) given a window length `n` and a
     sample spacing `d`::
 
-      f = [0, 1, ..., n/2-1, -n/2, ..., -1] / (d*n)         if n is even
+      f = [0, 1, ...,   n/2-1,     -n/2, ..., -1] / (d*n)   if n is even
       f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (d*n)   if n is odd
 
     Parameters
     ----------
     n : int
         Window length.
-    d : scalar
-        Sample spacing.
+    d : scalar, optional
+        Sample spacing. Default is 1.
 
     Returns
     -------
@@ -151,12 +152,60 @@ def fftfreq(n,d=1.0):
 
     """
     assert isinstance(n,types.IntType) or isinstance(n, integer)
-    val = 1.0/(n*d)
+    val = 1.0 / (n * d)
     results = empty(n, int)
     N = (n-1)//2 + 1
-    p1 = arange(0,N,dtype=int)
+    p1 = arange(0, N, dtype=int)
     results[:N] = p1
-    p2 = arange(-(n//2),0,dtype=int)
+    p2 = arange(-(n//2), 0, dtype=int)
     results[N:] = p2
     return results * val
     #return hstack((arange(0,(n-1)/2 + 1), arange(-(n/2),0))) / (n*d)
+
+
+def rfftfreq(n, d=1.0):
+    """
+    Return the Discrete Fourier Transform sample frequencies 
+    (for usage with rfft, irfft).
+
+    The returned float array contains the frequency bins in
+    cycles/unit (with zero at the start) given a window length `n` and a
+    sample spacing `d`::
+
+      f = [0, 1, ...,     n/2-1,     n/2] / (d*n)   if n is even
+      f = [0, 1, ..., (n-1)/2-1, (n-1)/2] / (d*n)   if n is odd
+
+    Unlike `fftfreq` (but like `scipy.fftpack.rfftfreq`)
+    the Nyquist frequency component is considered to be positive.
+
+    Parameters
+    ----------
+    n : int
+        Window length.
+    d : scalar, optional
+        Sample spacing. Default is 1.
+
+    Returns
+    -------
+    out : ndarray
+        The array of length `n`, containing the sample frequencies.
+
+    Examples
+    --------
+    >>> signal = np.array([-2, 8, 6, 4, 1, 0, 3, 5, -3, 4], dtype=float)
+    >>> fourier = np.fft.rfft(signal)
+    >>> n = signal.size
+    >>> sample_rate = 100
+    >>> freq = np.fft.fftfreq(n, d=1./sample_rate)
+    >>> freq
+    array([  0.,  10.,  20.,  30.,  40., -50., -40., -30., -20., -10.])
+    >>> freq = np.fft.rfftfreq(n, d=1./sample_rate)
+    >>> freq
+    array([  0.,  10.,  20.,  30.,  40.,  50.])
+
+    """
+    assert isinstance(n,types.IntType) or isinstance(n, integer)
+    val = 1.0/(n*d)
+    N = n//2 + 1
+    results = arange(0, N, dtype=int)
+    return results * val
